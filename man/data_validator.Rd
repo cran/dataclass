@@ -4,10 +4,12 @@
 \alias{data_validator}
 \title{Convert a dataclass to a data frame validator}
 \usage{
-data_validator(x)
+data_validator(x, strict_cols = TRUE)
 }
 \arguments{
 \item{x}{A dataclass object}
+
+\item{strict_cols}{Should additional columns be allowed in the output?}
 }
 \value{
 A function with the following properties:
@@ -20,23 +22,38 @@ A function with the following properties:
 }
 \description{
 If you intend to use your dataclass to validate data frame like object such
-as tibbles, data frames, or data tables, pass the dataclass into this 
+as tibbles, data frames, or data tables, pass the dataclass into this
 function to modify behavior.
 }
 \examples{
-# Define a dataclass for creating data! Wrap in data_validator():
+# Define a dataclass for creating data! Pass to data_validator():
 my_df_dataclass <-
- data_validator(dataclass(
-   dte_col = dte_vec(),
-   chr_col = chr_vec(),
-   # Custom column validator ensures values are positive!
-   new_col = function(x) all(x > 0)
- ))
+  dataclass(
+    dte_col = dte_vec(),
+    chr_col = chr_vec(),
+    # Custom column validator ensures values are positive!
+    new_col = function(x) all(x > 0)
+  ) |>
+  data_validator()
 
 # Validate a data frame or data frame like objects!
-my_df_dataclass(data.frame(
- dte_col = as.Date("2022-01-01"),
- chr_col = "String!",
- new_col = 100
-))
+data.frame(
+  dte_col = as.Date("2022-01-01"),
+  chr_col = "String!",
+  new_col = 100
+) |>
+  my_df_dataclass()
+
+# Allow additional columns in output
+test_df_class <-
+  dataclass(
+    dte_col = dte_vec()
+  ) |>
+  data_validator(strict_cols = FALSE)
+
+tibble::tibble(
+  dte_col = as.Date("2022-01-01"),
+  other_col = "a"
+) |>
+  test_df_class()
 }

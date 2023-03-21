@@ -2,82 +2,48 @@
 % Please edit documentation in R/validator.R
 \name{any_obj}
 \alias{any_obj}
-\alias{atm_vec}
-\alias{dte_vec}
-\alias{num_vec}
-\alias{chr_vec}
-\alias{lgl_vec}
-\alias{fct_vec}
-\alias{df_like}
-\title{Validate dataclass inputs}
+\title{Validator: Allow any object}
 \usage{
 any_obj()
-
-atm_vec(max_l = Inf, min_l = 1)
-
-dte_vec(max_l = Inf, min_l = 1)
-
-num_vec(max_l = Inf, min_l = 1)
-
-chr_vec(max_l = Inf, min_l = 1)
-
-lgl_vec(max_l = Inf, min_l = 1)
-
-fct_vec(max_l = Inf, min_l = 1)
-
-df_like(max_l = Inf, min_l = 1)
-}
-\arguments{
-\item{max_l}{The maximum length (or row count for data frames) of an object}
-
-\item{min_l}{The minimum length (or row count for data frames) of an object}
 }
 \value{
 A function with the following properties:
 
-* Accepts vector (or data frame in the case of df_like()) to be tested
-* The returned functions are run when the created dataclass is called
-* Returned functions each return TRUE or FALSE if new elements are valid
+* Always returns TRUE
+* Bypasses any dataclass checks
 }
 \description{
-These are utility functions which can be used to validate dataclass inputs.
-All of these functions follow the same basic structure. If no arguments are
-provided they will be passed as basic type validators. However, you can
-specify a max and min length (or rowcount in the case of df_like()). We put
-max as the first argument because we are typically concerned with the max
-amount of values more than the minimum. For example, dte_vec(1) ensures a
-date vector of length one is returned (in other words a single date).
+This function is used to bypass dataclass checks for a given element. If you
+do not want dataclass to check a given element, set the element equal to
+any_obj() to allow any object. Keep in mind that while dataclass will bypass
+the check, the object must still be a valid R object. Furthermore, if you
+are using dataclass to create a tibble, then the object must be a valid
+tibble column type, even if additional checks are not considered. This can be
+dangerous because dataclass is designed to check objects, not bypass them.
+Use this validator sparingly and consider how you can write a stricter
+dataclass.
 }
-\details{
-This function will return a new function with named argument for each of the
-elements you define here. If you want to define more customized behavior you
-can create your own validator functions and insert them as arguments during
-dataclass creation.
-}
-\section{Functions}{
-\itemize{
-\item \code{atm_vec()}: Validate a vector
-
-\item \code{dte_vec()}: Validate a date vector
-
-\item \code{num_vec()}: Validate a numeric vector
-
-\item \code{chr_vec()}: Validate a character vector
-
-\item \code{lgl_vec()}: Validate a logical vector
-
-\item \code{fct_vec()}: Validate a factor vector
-
-\item \code{df_like()}: Validate a data like object
-
-}}
 \examples{
-atm_vec(1, 10)   # An atomic vector of any type between 1 and 10 elements
-dte_vec(1)       # A single date
-num_vec()        # A numeric vector of any length
-chr_vec(1)       # A single string
-lgl_vec(5, 10)   # A logical vector between 5 and 10 elements in length
-fct_vec(100)     # A factor vector with at most 100 elements
-df_like(Inf, 50) # A data object with at least 50 rows
-any_obj()        # Allows any object without validation (can be dangerous!)
+# Define a dataclass:
+my_dataclass <-
+  dataclass(
+    date_val = dte_vec(),
+    anything = any_obj()
+  )
+
+# While `date_val` must be a date, `anything` can be any value!
+my_dataclass(
+  date_val = as.Date("2022-01-01"),
+  anything = lm(vs ~ am, mtcars)
+)
+
+my_dataclass(
+  date_val = as.Date("2022-01-01"),
+  anything = c(1, 2, 3, 4, 5)
+)
+
+my_dataclass(
+  date_val = as.Date("2022-01-01"),
+  anything = list(a = 1, b = 2)
+)
 }
